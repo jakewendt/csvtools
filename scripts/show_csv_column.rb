@@ -16,7 +16,10 @@ optparse = OptionParser.new do |opts|
 	opts.banner = "\nUsage: #{File.basename($0)} [options] csv_file(s)\n\n" <<
 		"This script was designed to display the requested column(s) from the given csv files.\n" <<
 		"Requesting a nonexistant column will simply create an empty output column." <<
-		"Column names are case sensitive."
+		"Column names are case sensitive." <<
+		"Ex." <<
+		"#{File.basename($0)} -c RACE -c RACE_-4 -c RACE_1 -c RACE_2 -c RACE_5 -c RACE_6 -c RACE_8 -c RACE_9 merged-ego-alter-data-test.csv"
+
 
 	#	Define the options, and what they do
 
@@ -44,14 +47,14 @@ end
 optparse.parse!
 
 
-ARGV.each do |infilename|
+puts options[:columns].to_csv
 
-	puts options[:columns].to_csv
+ARGV.each do |infilename|
 
 	(CSV.open( infilename, 'r:bom|utf-8', headers: true )).each do |line|
 		
 		puts options[:columns].collect{|c|line[c]}.to_csv
 		
 	end
-end
 
+end
