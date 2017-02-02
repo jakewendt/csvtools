@@ -30,7 +30,7 @@ optparse = OptionParser.new do |opts|
 		"ALL CSV files MUST have the same columns.\n" <<
 		"Column names are case sensitive.\n\n" <<
 		"Examples\n\n" <<
-		"#{File.basename($0)} -c RACE Exports\ 161214/merged-ego-alter-data.csv\n\n" <<
+		"#{File.basename($0)} -c RACE \"Exports 161214/merged-ego-alter-data.csv\"\n\n" <<
 		" cat def.csv\n" <<
 		"  d,e,f\n" <<
 		"  1;2,3,4\n" <<
@@ -68,6 +68,13 @@ end
 # any options found there, as well as any parameters for
 # the options. What's left is the list of files to resize.
 optparse.parse!
+
+
+#       file required
+if ARGV.empty?
+	puts optparse   #       Basically display the command line help
+	exit
+end
 
 
 f=CSV.open( ARGV[0], 'rb')
