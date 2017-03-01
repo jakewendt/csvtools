@@ -19,6 +19,7 @@ end
 # parsed from the command-line by
 # OptionParser.
 options = {
+	:columns => []
 #	:verbose => false
 }
 
@@ -90,14 +91,9 @@ if ARGV.empty?
 	exit
 end
 
-
 f=CSV.open( ARGV[0], 'rb')
 header_line = f.gets
 f.close
-
-
-
-#	values=[]
 
 column_values = {}
 options[:columns].each do |column|
@@ -106,42 +102,26 @@ end
 
 ARGV.each do |infilename|
 	(CSV.open( infilename, 'r:bom|utf-8', headers: true )).each do |line|
-#		values << line[options[:column]].to_s.squish.split(/\s*;\s*/)
 		options[:columns].each do |column|
 			column_values[column] += line[column].to_s.squish.split(/\s*;\s*/)
 		end
 	end
 end
 
-#values = values.flatten.sort.uniq
-#values = values.flatten.sort.uniq
-puts column_values
-
 column_values.each_pair do |column,values|
 	column_values[column]=values.uniq
 end
-puts column_values
 
-puts header_line.inspect
-#values.each do |v|
-#	raise "#{options[:column]}_#{v} Exists" if header_line.include?("#{options[:column]}_#{v}")
-#	header_line << "#{options[:column]}_#{v}"
-#end
 column_values.each_pair do |column,values|
 	values.each do |value|
 		raise "#{column}_#{value} Exists" if header_line.include?("#{column}_#{value}")
 		header_line << "#{column}_#{value}"
 	end
 end
-puts header_line.inspect
 
 puts header_line.to_csv
 ARGV.each do |infilename|
 	(CSV.open( infilename, 'r:bom|utf-8', headers: true )).each do |line|
-
-#		values.each do |v|
-#			line << (( line[options[:column]].to_s.squish.split(/\s*;\s*/).include?(v) ) ? 1 : 0)
-#		end
 		column_values.each_pair do |column,values|
 			values.each do |value|
 				line << (( line[column].to_s.squish.split(/\s*;\s*/).include?(value) ) ? 1 : 0)
