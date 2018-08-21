@@ -19,7 +19,10 @@ end
 # parsed from the command-line by
 # OptionParser.
 options = {
-	:columns => []
+	:ignore_rows => [],
+	:columns => [],
+	:col_char => ",",
+	:val_char => ";",
 #	:verbose => false
 }
 
@@ -63,7 +66,19 @@ optparse = OptionParser.new do |opts|
 	#	Define the options, and what they do
 
 	opts.on( '-c', '--col column_name(s)', "CSV Column Names (separated by commas)") do |columns|
-		options[:columns] = columns.split(/\s*,\s*/).uniq
+		options[:columns] += columns.split(/\s*,\s*/).uniq
+	end
+
+	opts.on( '-i', '--ignore row_numbers(s)', "Row numbers (separated by commas)[0=header]") do |rows|
+		options[:ignore_rows] += rows.split(/\s*,\s*/).uniq.collect(&:to_i)
+	end
+
+	opts.on( '-s', '--sep column_separating_character', "column separating character") do |char|
+		options[:col_char] = char
+	end
+
+	opts.on( '-v', '--val value_separating_character', "value separating character") do |char|
+		options[:val_char] = char
 	end
 
 #	opts.on( '-v', '--verbose', 'Output more information' ) do
@@ -77,7 +92,8 @@ optparse = OptionParser.new do |opts|
 		exit
 	end
 end
- 
+
+
 # Parse the command-line. Remember there are two forms
 # of the parse method. The 'parse' method simply parses
 # ARGV, while the 'parse!' method parses ARGV and removes
@@ -91,7 +107,9 @@ if ARGV.empty?
 	exit
 end
 
-f=CSV.open( ARGV[0], 'rb')
+puts "Processing '#{ARGV[0]}'"
+
+f=CSV.open( "#{ARGV[0]}", 'rb')
 header_line = f.gets
 f.close
 
@@ -101,9 +119,11 @@ options[:columns].each do |column|
 end
 
 ARGV.each do |infilename|
-	(CSV.open( infilename, 'r:bom|utf-8', headers: true )).each do |line|
+	(CSV.open( "#{infilename}", 'r:bom|utf-8', headers: true, col_sep: options[:col_char] )).each_with_index do |line,index|
+		next if options[:ignore_rows].include?(index+1)
 		options[:columns].each do |column|
-			column_values[column] += line[column].to_s.squish.split(/\s*;\s*/)
+#			column_values[column] += line[column].to_s.squish.split(/\s*;\s*/)
+			column_values[column] += line[column].to_s.squish.split(/\s*#{options[:val_char]}\s*/)
 		end
 	end
 end
@@ -121,7 +141,7 @@ end
 
 puts header_line.to_csv
 ARGV.each do |infilename|
-	(CSV.open( infilename, 'r:bom|utf-8', headers: true )).each do |line|
+	(CSV.open( "#{infilename}", 'r:bom|utf-8', headers: true )).each do |line|
 		column_values.each_pair do |column,values|
 			values.each do |value|
 				line << (( line[column].to_s.squish.split(/\s*;\s*/).include?(value) ) ? 1 : 0)
